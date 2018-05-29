@@ -2,15 +2,21 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
+session_start();
+
+if (isset($_SESSION['user'])) {
+    header('Location: tasklist.php');
+    die();
+}
+
 $error = false;
 
-if ($_POST['username'] && $_POST['password']) {
+if (isset($_POST['username']) && isset($_POST['password'])) {
     $user = new User($_POST['username']);
 
     if (password_verify($_POST['password'], $user->getPasssword())) {
-        session_start();
         $_SESSION['user'] = $user->getName();
-        header('Location: /todoapp/tasklist.php');
+        header('Location: tasklist.php');
         die();
     } else {
         $error = 'Benutzer oder Passwort stimmt nicht…';

@@ -4,8 +4,20 @@ require __DIR__ . '/vendor/autoload.php';
 
 session_start();
 
-if ($_POST['logout']) {
+if (isset($_POST['logout'])) {
     unset($_SESSION['user']);
+}
+
+if (isset($_POST['setDone'])) {
+    $task = new Task($_POST['setDone']);
+    $task->setState('done');
+    $task->update();
+}
+
+if (isset($_POST['setOpen'])) {
+    $task = new Task($_POST['setOpen']);
+    $task->setState('open');
+    $task->update();
 }
 
 $user = false;
@@ -13,7 +25,7 @@ $user = false;
 if (isset($_SESSION['user'])) {
     $user = new User($_SESSION['user']);
 } else {
-    header('Location: /todoapp/login.php');
+    header('Location: login.php');
     die();
 }
 
@@ -31,6 +43,17 @@ if (isset($_SESSION['user'])) {
 <form method="post">
     Hallo <?php echo $user->getName(); ?>.
     <button type="submit" name="logout" value="true">Logout</button>
+    <ul>
+    <?php
+    foreach ($user->getTasks() as $task) {
+        if ($task->getState() === 'open') {
+            echo '<li>' . $task->getName() . ' (' . $task->getDue()->format('d.m.Y')  . ') <button type="submit" name="setDone" value="' . $task->getId() . '">Erledigt</button></li>';
+        } else {
+            echo '<li style="text-decoration: line-through">' . $task->getName() . ' (' . $task->getDue()->format('d.m.Y')  . ') <button type="submit" name="setOpen" value="' . $task->getId() . '">Unerledigen</button></li>';
+        }
+    }
+    ?>
+    </ul>
 </form>
 </body>
 </html>

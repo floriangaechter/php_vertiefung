@@ -1,6 +1,8 @@
 <?php
 
-class User {
+class User
+{
+    private $id;
     private $name;
     private $email;
     private $passsword;
@@ -19,10 +21,21 @@ class User {
             $statement->execute([':username' => $username]);
             $user = $statement->fetch();
 
+            $this->setId($user['id']);
             $this->setName($user['username']);
             $this->setEmail($user['email']);
             $this->setPasssword($user['password']);
         }
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
     }
 
     public function getName()
@@ -53,5 +66,45 @@ class User {
     public function setPasssword($passsword)
     {
         $this->passsword = $passsword;
+    }
+
+    public function create()
+    {
+        $statement = DB::get()->prepare("
+          INSERT INTO user 
+            (username, 
+             password, 
+             email) 
+          VALUES
+            (:username, 
+             :password, 
+             :email)"
+        );
+        $statement->execute([
+            ':username' => $this->getName(),
+            ':password' => $this->getPasssword(),
+            ':email'    => $this->getEmail()]
+        );
+    }
+
+    public function getTasks()
+    {
+        $statement = DB::get()->prepare('
+              SELECT
+                id
+              FROM
+                task
+              WHERE
+                user_id = :id');
+
+        $statement->execute([':id' => $this->getId()]);
+
+        $tasks = [];
+
+        foreach($statement->fetchAll() as $task) {
+            $tasks[] = new Task($task['id']);
+        }
+
+        return $tasks;
     }
 }

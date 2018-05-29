@@ -7,50 +7,23 @@ session_start();
 $error = false;
 
 if (isset($_SESSION['user'])) {
-    header('Location: /todoapp/tasklist.php');
+    header('Location: tasklist.php');
     die();
 }
 
-if ($_POST['username'] && $_POST['email'] && $_POST['password']) {
-    $statement = DB::get()->prepare('
-      SELECT
-        *
-      FROM
-        user
-      WHERE
-        username = :username');
+if (isset($_POST['username']) && isset($_POST['email']) && isset($_POST['password'])) {
+    $user = new User($_POST['username']);
 
-    $statement->execute([':username' => $_POST['username']]);
-    $user = $statement->fetch();
-
-    if ($user) {
+    if ($user->getName()) {
         $error = 'Benutzer existiert bereits';
     } else {
-        $statement = DB::get()->prepare("
-          INSERT INTO user 
-            (username, 
-             password, 
-             email) 
-          VALUES
-            (:username, 
-             :password, 
-             :email)"
-        );
-        $statement->execute([':username' => $_POST['username'], ':password' => password_hash($_POST['password'], PASSWORD_DEFAULT), ':email' => $_POST['email']]);
+        $user->setName($_POST['username']);
+        $user->setPasssword(password_hash($_POST['password'], PASSWORD_DEFAULT));
+        $user->setEmail($_POST['email']);
+        $user->create();
 
-        $statement = DB::get()->prepare('
-          SELECT
-            *
-          FROM
-            user
-          WHERE
-            username = :username');
-
-        $statement->execute([':username' => $_POST['username']]);
-        $user = $statement->fetch();
-
-        $_SESSION['user'] = $user;
-        header('Location: /todoapp/tasklist.php');
+        $_SESSION['user'] = $user->getName();
+        header('Location: tasklist.php');
         die();
     }
 }
